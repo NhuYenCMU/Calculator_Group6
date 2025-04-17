@@ -1022,61 +1022,11 @@ public class CalculatorJFrame extends javax.swing.JFrame {
 
     private void jMenuItem_changeFontActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem_changeFontActionPerformed
         // Danh sách toàn bộ font hệ thống
-//    String[] fonts = GraphicsEnvironment
-//        .getLocalGraphicsEnvironment()
-//        .getAvailableFontFamilyNames();
-//
-//    // Hiển thị dialog chọn font
-//    String chosen = (String) JOptionPane.showInputDialog(
-//        this,
-//        "Select font:",
-//        "Font Chooser",
-//        JOptionPane.PLAIN_MESSAGE,
-//        null,
-//        fonts,
-//        txtDisplay.getFont().getFamily()
-//    );
-//    if (chosen == null) return;
-//
-//    // Lấy style & size
-//    int style = defaultDisplayFont.getStyle();
-//    int size  = defaultDisplayFont.getSize();
-//    Font newFont = new Font(chosen, style, size);
-//
-//    // Tập các ký tự mẫu cần render
-//    String sampleChars = "0123456789.+-x/ %^=√CE";
-//
-//    // Kiểm tra xem font mới có thể render hết sampleChars không
-//    boolean fontOk = true;
-//    for (char ch : sampleChars.toCharArray()) {
-//        if (!newFont.canDisplay(ch)) {
-//            fontOk = false;
-//            break;
-//        }
-//    }
-//
-//    if (!fontOk) {
-//        // Thông báo và không áp dụng font mới
-//        JOptionPane.showMessageDialog(this,
-//            "Font \"" + chosen + "\" không hỗ trợ một số ký tự đặc biệt.\n" +
-//            "Chương trình sẽ giữ lại font mặc định.",
-//            "Font not supported",
-//            JOptionPane.WARNING_MESSAGE
-//        );
-//        return;
-//    }
-//
-//    // 3. Áp dụng cho txtDisplay và tất cả JButton
-//    txtDisplay.setFont(newFont);
-//    for (Component c : getContentPane().getComponents()) {
-//        if (c instanceof javax.swing.JButton) {
-//            ((javax.swing.JButton)c).setFont(newFont);
-//        }
-//    }
     String[] fonts = GraphicsEnvironment
         .getLocalGraphicsEnvironment()
         .getAvailableFontFamilyNames();
 
+    // Hiển thị dialog chọn font
     String chosen = (String) JOptionPane.showInputDialog(
         this,
         "Select font:",
@@ -1088,43 +1038,41 @@ public class CalculatorJFrame extends javax.swing.JFrame {
     );
     if (chosen == null) return;
 
-    // Tạo font mới cùng style/size với mặc định
-    Font newFont = new Font(chosen, 
-                            defaultDisplayFont.getStyle(),
-                            defaultDisplayFont.getSize());
+    // Lấy style & size
+    int style = defaultDisplayFont.getStyle();
+    int size  = defaultDisplayFont.getSize();
+    Font newFont = new Font(chosen, style, size);
 
-    // --- 1) Kiểm tra cho txtDisplay: chỉ cần render số và dấu thập phân ---
-    String displayChars = "0123456789.";
-    boolean displayOk = true;
-    for (char ch : displayChars.toCharArray()) {
+    // Tập các ký tự mẫu cần render
+    String sampleChars = "0123456789.+-x/ %^=√CE";
+
+    // Kiểm tra xem font mới có thể render hết sampleChars không
+    boolean fontOk = true;
+    for (char ch : sampleChars.toCharArray()) {
         if (!newFont.canDisplay(ch)) {
-            displayOk = false;
+            fontOk = false;
             break;
         }
     }
-    // Áp dụng hoặc fallback
-    txtDisplay.setFont(displayOk ? newFont : defaultDisplayFont);
 
-    // --- 2) Kiểm tra từng JButton dựa trên text của nó ---
-    for (Component c : getContentPane().getComponents()) {
-        if (c instanceof javax.swing.JButton) {
-            JButton btn = (JButton)c;
-            String label = btn.getText();
-            boolean btnOk = true;
-            for (char ch : label.toCharArray()) {
-                if (!newFont.canDisplay(ch)) {
-                    btnOk = false;
-                    break;
-                }
-            }
-            btn.setFont(btnOk ? newFont : defaultButtonFont);
-        }
+    if (!fontOk) {
+        // Thông báo và không áp dụng font mới
+        JOptionPane.showMessageDialog(this,
+            "Font \"" + chosen + "\" không hỗ trợ một số ký tự đặc biệt.\n" +
+            "Chương trình sẽ giữ lại font mặc định.",
+            "Font not supported",
+            JOptionPane.WARNING_MESSAGE
+        );
+        return;
     }
 
-    // Cuối cùng repaint lại để chắc chắn mọi thứ cập nhật
-    txtDisplay.repaint();
-    getContentPane().revalidate();
-    getContentPane().repaint();
+    // 3. Áp dụng cho txtDisplay và tất cả JButton
+    txtDisplay.setFont(newFont);
+    for (Component c : getContentPane().getComponents()) {
+        if (c instanceof javax.swing.JButton) {
+            ((javax.swing.JButton)c).setFont(newFont);
+        }
+    }
     }//GEN-LAST:event_jMenuItem_changeFontActionPerformed
 
     private void jMenuItem_changeColorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem_changeColorActionPerformed
