@@ -16,7 +16,9 @@ import javax.swing.KeyStroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import javax.swing.JColorChooser;
+import javax.swing.JDialog;
 import javax.swing.JOptionPane;
+import javax.swing.colorchooser.AbstractColorChooserPanel;
 
 public class CalculatorJFrame extends javax.swing.JFrame {
 
@@ -133,7 +135,15 @@ public class CalculatorJFrame extends javax.swing.JFrame {
         im.put(KeyStroke.getKeyStroke('/'), "div");
         im.put(KeyStroke.getKeyStroke('%'), "pct");
         im.put(KeyStroke.getKeyStroke('^'), "pow");
-        // (nếu muốn hỗ trợ √ qua tổ hợp khác, thêm tương tự)
+        im.put(KeyStroke.getKeyStroke('@'), "sqrt");
+
+        am.put("sqrt", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                btn_sqrt.doClick();
+                txtDisplay.requestFocusInWindow();
+            }
+        });
         am.put("add", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -214,6 +224,16 @@ public class CalculatorJFrame extends javax.swing.JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 btn_C.doClick();
+                txtDisplay.requestFocusInWindow();
+            }
+        });
+
+        //CE = clear entry
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_INSERT, 0), "CE");
+        am.put("CE", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                btn_CE.doClick();
                 txtDisplay.requestFocusInWindow();
             }
         });
@@ -1141,79 +1161,111 @@ public class CalculatorJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItem_LightModeActionPerformed
 
     private void jMenuItem_changeFontActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem_changeFontActionPerformed
-        // Danh sách toàn bộ font hệ thống
-    String[] fonts = GraphicsEnvironment
-        .getLocalGraphicsEnvironment()
-        .getAvailableFontFamilyNames();
+        // 1. Danh sách font
+        String[] fonts = GraphicsEnvironment
+                .getLocalGraphicsEnvironment()
+                .getAvailableFontFamilyNames();
 
-    // Hiển thị dialog chọn font
-    String chosen = (String) JOptionPane.showInputDialog(
-        this,
-        "Select font:",
-        "Font Chooser",
-        JOptionPane.PLAIN_MESSAGE,
-        null,
-        fonts,
-        txtDisplay.getFont().getFamily()
-    );
-    if (chosen == null) return;
-
-    // Lấy style & size
-    int style = defaultDisplayFont.getStyle();
-    int size  = defaultDisplayFont.getSize();
-    Font newFont = new Font(chosen, style, size);
-
-    // Tập các ký tự mẫu cần render
-    String sampleChars = "0123456789.+-x/ %^=√CE";
-
-    // Kiểm tra xem font mới có thể render hết sampleChars không
-    boolean fontOk = true;
-    for (char ch : sampleChars.toCharArray()) {
-        if (!newFont.canDisplay(ch)) {
-            fontOk = false;
-            break;
-        }
-    }
-
-    if (!fontOk) {
-        // Thông báo và không áp dụng font mới
-        JOptionPane.showMessageDialog(this,
-            "Font \"" + chosen + "\" không hỗ trợ một số ký tự đặc biệt.\n" +
-            "Chương trình sẽ giữ lại font mặc định.",
-            "Font not supported",
-            JOptionPane.WARNING_MESSAGE
+        // 2. Chọn font
+        String chosen = (String) JOptionPane.showInputDialog(
+                this, "Select font:", "Font Chooser",
+                JOptionPane.PLAIN_MESSAGE, null, fonts,
+                defaultDisplayFont.getFamily()
         );
-        return;
-    }
-
-    // 3. Áp dụng cho txtDisplay và tất cả JButton
-    txtDisplay.setFont(newFont);
-    for (Component c : getContentPane().getComponents()) {
-        if (c instanceof javax.swing.JButton) {
-            ((javax.swing.JButton)c).setFont(newFont);
+        if (chosen == null) {
+            return;
         }
-    }
+
+        // Lấy style & size
+        int style = defaultDisplayFont.getStyle();
+        int size = defaultDisplayFont.getSize();
+        Font newFont = new Font(chosen, style, size);
+
+        // Tập các ký tự mẫu cần render
+        String sampleChars = "0123456789.+-x/ %^=√CE";
+
+        // Kiểm tra xem font mới có thể render hết sampleChars không
+        boolean fontOk = true;
+        for (char ch : sampleChars.toCharArray()) {
+            if (!newFont.canDisplay(ch)) {
+                fontOk = false;
+                break;
+            }
+        }
+
+        if (!fontOk) {
+            // Thông báo và không áp dụng font mới
+            JOptionPane.showMessageDialog(this,
+                    "Font \"" + chosen + "\" does not support some special characters\n"
+                    + "Keep current font.",
+                    "Font not supported",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        // 4. Áp dụng cho txtDisplay: FAMILY mới, SIZE+STYLE gốc
+        Font displayFont = new Font(chosen,
+                defaultDisplayFont.getStyle(),
+                defaultDisplayFont.getSize());
+        txtDisplay.setFont(displayFont);
+        txtHistory.setFont(displayFont);
+
+        // 3. Áp dụng cho txtDisplay và tất cả JButton
+        txtDisplay.setFont(newFont);
+        for (Component c : getContentPane().getComponents()) {
+            if (c instanceof javax.swing.JButton) {
+                ((javax.swing.JButton) c).setFont(newFont);
+            }
+        }
+
+        for (Component c : getContentPane().getComponents()) {
+            if (c instanceof JButton) {
+                JButton btn = (JButton) c;
+                Font btnFont = new Font(chosen,
+                        defaultButtonFont.getStyle(),
+                        defaultButtonFont.getSize());
+                btn.setFont(btnFont);
+            }
+        }
+        revalidate();
+        repaint();
     }//GEN-LAST:event_jMenuItem_changeFontActionPerformed
 
     private void jMenuItem_changeColorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem_changeColorActionPerformed
-        Color newBg = JColorChooser.showDialog(
-                this,
-                "Select background color",
-                getContentPane().getBackground()
-        );
-        if (newBg != null) {
-            // Áp dụng cho background của frame, txtDisplay, txtHistory và các nút
-            getContentPane().setBackground(newBg);
-            txtDisplay.setBackground(newBg);
-            txtHistory.setBackground(newBg);
-            for (Component c : getContentPane().getComponents()) {
-                if (c instanceof javax.swing.JButton) {
-                    c.setBackground(newBg);
-                }
+        // 1) Tạo chooser và chỉ giữ panel “Swatches”
+        JColorChooser chooser = new JColorChooser(getContentPane().getBackground());
+        AbstractColorChooserPanel[] allPanels = chooser.getChooserPanels();
+        for (AbstractColorChooserPanel p : allPanels) {
+            if (!"Swatches".equals(p.getDisplayName())) {
+                chooser.removeChooserPanel(p);
             }
         }
+        JDialog dialog = JColorChooser.createDialog(
+                this,
+                "Select background color",
+                true, // modal
+                chooser,
+                e -> {     // OK button => apply color
+                    Color newBg = chooser.getColor();
+                    if (newBg != null) {
+                        applyBackgroundColor(newBg);
+                    }
+                },
+                null // Cancel button => do nothing
+        );
+        dialog.setVisible(true);
     }//GEN-LAST:event_jMenuItem_changeColorActionPerformed
-
+    private void applyBackgroundColor(Color newBg) {
+        getContentPane().setBackground(newBg);
+        txtDisplay.setBackground(newBg);
+        txtHistory.setBackground(newBg);
+        for (Component c : getContentPane().getComponents()) {
+            if (c instanceof javax.swing.JButton) {
+                c.setBackground(newBg);
+            }
+        }
+    }
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         try {
             double value = Double.parseDouble(txtDisplay.getText());
@@ -1277,7 +1329,7 @@ public class CalculatorJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void btnLogActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLogActionPerformed
-       try {
+        try {
             double value = Double.parseDouble(txtDisplay.getText());
             if (value <= 0) {
                 txtDisplay.setText("Math ERROR");
@@ -1401,4 +1453,5 @@ public class CalculatorJFrame extends javax.swing.JFrame {
     private java.awt.TextField txtDisplay;
     private java.awt.TextArea txtHistory;
     // End of variables declaration//GEN-END:variables
+
 }
